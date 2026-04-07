@@ -1,0 +1,62 @@
+name: JISAME 週次バッチ
+
+on:
+  schedule:
+    # 毎週日曜 AM 3:00 JST = UTC 18:00 (土曜)
+    - cron: "0 18 * * 6"
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  weekly-batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      # ── リポジトリをチェックアウト ─────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Python セットアップ ────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # ── 依存関係インストール ───────────────────────────
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── data/ ディレクトリを artifacts からリストア ─────
+      # 前回実行のCSV・DBを引き継いで差分更新する
+      - name: Download previous data artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jisame-data
+          path: data/
+        continue-on-error: true  # 初回は artifact がないのでエラーを無視
+
+      # ── 週次バッチ実行 ─────────────────────────────────
+      - name: Run weekly batch
+        run: python weekly_batch.py
+        env:
+          TZ: Asia/Tokyo
+
+      # ── data/ を artifact として保存（次回引き継ぎ用） ──
+      - name: Upload data artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jisame-data
+          path: data/
+          retention-days: 90
+          overwrite: true
+
+      # ── CSV をリリースアセットとしてもアップロード ──────
+      - name: Upload signals CSV as artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: signals-weekly-${{ github.run_id }}
+          path: data/signals_weekly.csv
+          retention-days: 30
