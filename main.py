@@ -773,7 +773,8 @@ else:
                     showgrid=False,
                 ),
             )
-            st.plotly_chart(fig_hm, use_container_width=True, height=hm_height)
+            st.plotly_chart(fig_hm, use_container_width=True, height=hm_height,
+                            config={"displayModeBar": False})
         else:
             st.markdown('<div style="color:#555;font-size:12px;padding:8px 0;">データなし</div>',
                         unsafe_allow_html=True)
