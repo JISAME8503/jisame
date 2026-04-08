@@ -64,7 +64,7 @@ h2, h3, h4 { color: #aaaaaa !important; font-size: 12px !important;
     color: #ccc !important; font-size: 12px !important; border-radius: 6px !important;
 }
 
-/* ラジオ（セクタータブ） */
+/* ラジオ（期間タブ） */
 [data-testid="stRadio"] > label { display: none !important; }
 [data-testid="stRadio"] > div {
     display: flex !important; flex-direction: row !important;
@@ -81,8 +81,10 @@ h2, h3, h4 { color: #aaaaaa !important; font-size: 12px !important;
     background: #1a3a5c !important; border-color: #4d9fff !important;
     color: #4d9fff !important; font-weight: 600 !important;
 }
-[data-testid="stRadio"] > div > label > div { display: none !important; }
-[data-testid="stRadio"] > div > label > p {
+/* ラジオ円だけ非表示・テキストは表示 */
+[data-testid="stRadio"] input[type="radio"] { display: none !important; }
+[data-testid="stRadio"] > div > label p,
+[data-testid="stRadio"] > div > label span {
     color: inherit !important; font-size: inherit !important;
     font-weight: inherit !important; margin: 0 !important;
 }
