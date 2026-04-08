@@ -4,7 +4,25 @@ import numpy as np
 import plotly.graph_objects as go
 import json
 import os
-from scipy.stats import pearsonr
+import math
+
+def _pearsonr(x, y):
+    """scipy.stats.pearsonr の numpy/math 代替実装"""
+    n = len(x)
+    if n < 3:
+        return 0.0, 1.0
+    r = float(np.corrcoef(x, y)[0, 1])
+    if np.isnan(r):
+        return 0.0, 1.0
+    if abs(r) >= 1.0:
+        return r, 0.0
+    t_stat = r * math.sqrt((n - 2) / (1 - r * r))
+    df = n - 2
+    try:  # Python 3.12+
+        p = math.betainc(df / 2, 0.5, df / (df + t_stat * t_stat))
+    except AttributeError:  # フォールバック: 正規分布近似
+        p = 2 * (1 - (1 + math.erf(abs(t_stat) / math.sqrt(2))) / 2)
+    return r, float(min(p, 1.0))
 from config import MACRO_INDICATORS, SECTORS, DATA_DIR, CACHE_FILE, TICKER_NAMES
 from analysis import get_ticker_detail, load_sector, load_macro, _period_lag_score, _classify_tag
 
@@ -133,7 +151,7 @@ def get_heatmap(sector: str, macros: tuple, period_days: int = 0) -> tuple[list,
                     [macro_df[macro_ticker], stock], axis=1
                 ).dropna()
                 if len(aligned) >= 30:
-                    corr, p_value = pearsonr(aligned.iloc[:, 0], aligned.iloc[:, 1])
+                    corr, p_value = _pearsonr(aligned.iloc[:, 0], aligned.iloc[:, 1])
                     if p_value > 0.05:
                         corr = 0.0
                     row.append(round(corr, 3) if not pd.isna(corr) else None)
@@ -326,7 +344,7 @@ if page == "detail" and ticker_param:
                 x = chunk.iloc[:, 0].values[:-lag]
                 y = chunk.iloc[:, 1].values[lag:]
                 try:
-                    corr, p = pearsonr(x, y)
+                    corr, p = _pearsonr(x, y)
                     trend_corrs[lag].append(round(corr, 4) if p <= 0.05 and not np.isnan(corr) else 0.0)
                 except Exception:
                     trend_corrs[lag].append(0.0)

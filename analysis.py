@@ -4,7 +4,25 @@ import json
 import os
 import sqlite3
 import streamlit as st
-from scipy.stats import pearsonr
+import math
+
+def _pearsonr(x, y):
+    """scipy.stats.pearsonr の numpy/math 代替実装"""
+    n = len(x)
+    if n < 3:
+        return 0.0, 1.0
+    r = float(np.corrcoef(x, y)[0, 1])
+    if np.isnan(r):
+        return 0.0, 1.0
+    if abs(r) >= 1.0:
+        return r, 0.0
+    t_stat = r * math.sqrt((n - 2) / (1 - r * r))
+    df = n - 2
+    try:  # Python 3.12+
+        p = math.betainc(df / 2, 0.5, df / (df + t_stat * t_stat))
+    except AttributeError:  # フォールバック: 正規分布近似
+        p = 2 * (1 - (1 + math.erf(abs(t_stat) / math.sqrt(2))) / 2)
+    return r, float(min(p, 1.0))
 from config import MACRO_INDICATORS, SECTORS, ANALYSIS_CONFIG, DATA_DIR, CACHE_FILE, DB_FILE
 
 
@@ -54,7 +72,7 @@ def lag_correlation(macro: pd.Series, stock: pd.Series, max_lag: int) -> dict:
     s = aligned.iloc[:, 1].values
     for lag in range(1, max_lag + 1):
         x, y = m[:-lag], s[lag:]
-        corr, p_value = pearsonr(x, y)
+        corr, p_value = _pearsonr(x, y)
         if np.isnan(corr):
             continue
         if p_value > 0.05:
@@ -94,7 +112,7 @@ def _period_lag_score(macro: pd.Series, stock: pd.Series, days: int, max_lag: in
     for lag in range(1, max_lag + 1):
         x, y = mv[:-lag], sv[lag:]
         try:
-            corr, p = pearsonr(x, y)
+            corr, p = _pearsonr(x, y)
         except Exception:
             continue
         if np.isnan(corr) or p > 0.05:
