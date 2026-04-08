@@ -749,6 +749,7 @@ else:
                 ],
                 zmin=-1, zmax=1, showscale=True,
                 xgap=2, ygap=2,
+                hovertemplate="指標: %{x}<br>銘柄: %{y}<br>相関係数: %{z:.3f}<extra></extra>",
                 colorbar=dict(thickness=10, len=0.8,
                     tickfont=dict(color="#888", size=10),
                     bgcolor="#1e1e1e", bordercolor="#2a2a2a"),
