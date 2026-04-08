@@ -526,19 +526,11 @@ else:
         val_str = f"{val:,.1f}" if val < 1000 else f"{val:,.0f}"
         html += f"""
         <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;">
-          <div style="font-size:11px;color:#aaa;font-weight:600;margin-bottom:4px;letter-spacing:0.3px;">{name}</div>
+          <div style="font-size:13px;color:#e0e0e0;font-weight:700;margin-bottom:4px;">{name}</div>
           <div style="display:flex;align-items:baseline;gap:6px;">
             <span style="font-size:16px;font-weight:700;color:{val_color};">{val_str}</span>
             <span style="font-size:11px;font-weight:500;color:{val_color};">{chg_arrow}{abs(chg):.1f}%</span>
           </div>
-        </div>"""
-
-    # データ品質カード
-    html += f"""
-        <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 12px;">
-          <div style="font-size:11px;color:#aaa;font-weight:600;margin-bottom:4px;">データ品質</div>
-          <div style="font-size:16px;font-weight:700;color:#e0e0e0;">{fetched}/{total_indicators}取得</div>
-          <div style="font-size:11px;color:#888;">{'✓ 正常' if fetched >= total_indicators - 2 else '⚠ 一部欠損'}</div>
         </div>"""
 
     html += "</div></div>"
