@@ -518,7 +518,7 @@ else:
                           badge_text_color="#4d9fff", badge_border="#2a4a6a")
     html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">'
 
-    for name, data in list(macro_data.items())[:8]:
+    for name, data in macro_data.items():
         chg = data["change"]
         val = data["value"]
         val_color = "#26a69a" if chg > 0 else "#ef5350"
