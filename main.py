@@ -560,7 +560,6 @@ else:
     # ── 期間セレクタ（②③共通） ───────────────────────────
     PERIOD_OPTIONS  = {"3ヶ月": 63, "6ヶ月": 126, "12ヶ月": 252}
     PERIOD_SCORE_KEY = {"3ヶ月": "score_3m", "6ヶ月": "score_6m", "12ヶ月": "score_12m"}
-    st.markdown('<span style="font-size:11px;color:#666;">📅 表示期間</span>', unsafe_allow_html=True)
     selected_period = st.radio(
         "分析期間", list(PERIOD_OPTIONS.keys()),
         horizontal=True, key="signal_period",
@@ -581,13 +580,10 @@ else:
     )
 
     threshold = 0.2
-    html2_header = section_header("②", "本日の注目シグナル TOP10",
-                                  badge=f"{selected_period} / 閾値 ±{threshold}以上",
-                                  badge_color="#2a1a1a", badge_text_color="#ef9a9a",
-                                  badge_border="#ef535044") + "</div>"
-    st.html(html2_header)
-
-    html2 = '<div style="background:#222222;border:1px solid #2a2a2a;border-radius:10px;padding:0 18px 4px;">'
+    html2 = section_header("②", "本日の注目シグナル TOP10",
+                            badge=f"{selected_period} / 閾値 ±{threshold}以上",
+                            badge_color="#2a1a1a", badge_text_color="#ef9a9a",
+                            badge_border="#ef535044")
     if all_signals:
         for r in all_signals[:10]:
             period_corr = r.get(score_key)
