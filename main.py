@@ -560,6 +560,7 @@ else:
     # ── 期間セレクタ（②③共通） ───────────────────────────
     PERIOD_OPTIONS  = {"3ヶ月": 63, "6ヶ月": 126, "12ヶ月": 252}
     PERIOD_SCORE_KEY = {"3ヶ月": "score_3m", "6ヶ月": "score_6m", "12ヶ月": "score_12m"}
+    st.markdown('<span style="font-size:11px;color:#666;">📅 表示期間</span>', unsafe_allow_html=True)
     selected_period = st.radio(
         "分析期間", list(PERIOD_OPTIONS.keys()),
         horizontal=True, key="signal_period",
@@ -585,49 +586,6 @@ else:
                                   badge_color="#2a1a1a", badge_text_color="#ef9a9a",
                                   badge_border="#ef535044") + "</div>"
     st.html(html2_header)
-
-    # ── 銘柄検索 ─────────────────────────────────────────
-    search_q = st.text_input("🔍 銘柄検索", placeholder="ティッカー (例: 7203.T) または会社名",
-                              label_visibility="collapsed")
-    if search_q:
-        q = search_q.strip().upper()
-        matches = []
-        seen = set()
-        for sector_name, results in analysis.items():
-            for r in results:
-                t = r["ticker"]
-                n = TICKER_NAMES.get(t, "")
-                if q in t.upper() or q in n.upper():
-                    if t not in seen:
-                        matches.append((t, n, sector_name))
-                        seen.add(t)
-        if not matches:
-            for t, n in TICKER_NAMES.items():
-                if q in t.upper() or q in n.upper():
-                    if t not in seen:
-                        found_sector = ""
-                        for s_name, s_tickers in SECTORS.items():
-                            if t in s_tickers:
-                                found_sector = s_name
-                                break
-                        matches.append((t, n, found_sector))
-                        seen.add(t)
-        if matches:
-            result_html = ('<div style="background:#1e1e1e;border:1px solid #2a2a2a;'
-                           'border-radius:8px;padding:12px 16px;margin-bottom:12px;">'
-                           f'<div style="font-size:11px;color:#666;margin-bottom:8px;">'
-                           f'{len(matches)}件ヒット</div>')
-            for t, n, s in matches[:20]:
-                href = f"?page=detail&ticker={t}&sector={s}" if s else f"?page=detail&ticker={t}"
-                result_html += (
-                    f'<div style="padding:6px 0;border-bottom:1px solid #2a2a2a;">'
-                    f'<a href="{href}" target="_self" style="color:#4d9fff;font-size:13px;'
-                    f'font-weight:700;text-decoration:none;">{t}</a>'
-                    f'<span style="color:#aaa;font-size:12px;margin-left:6px;">{n}</span>'
-                    f'<span style="color:#555;font-size:11px;margin-left:8px;">{s}</span></div>'
-                )
-            result_html += '</div>'
-            st.html(result_html)
 
     html2 = '<div style="background:#222222;border:1px solid #2a2a2a;border-radius:10px;padding:0 18px 4px;">'
     if all_signals:
@@ -672,6 +630,49 @@ else:
         html2 += '<div style="color:#666;font-size:12px;padding:8px 0;">分析データがありません</div></div>'
 
     st.html(html2)
+
+    # ── 銘柄検索（ランキング下） ──────────────────────────
+    search_q = st.text_input("🔍 銘柄検索", placeholder="ティッカー (例: 7203.T) または会社名",
+                              label_visibility="collapsed")
+    if search_q:
+        q = search_q.strip().upper()
+        matches = []
+        seen = set()
+        for sector_name, results in analysis.items():
+            for r in results:
+                t = r["ticker"]
+                n = TICKER_NAMES.get(t, "")
+                if q in t.upper() or q in n.upper():
+                    if t not in seen:
+                        matches.append((t, n, sector_name))
+                        seen.add(t)
+        if not matches:
+            for t, n in TICKER_NAMES.items():
+                if q in t.upper() or q in n.upper():
+                    if t not in seen:
+                        found_sector = ""
+                        for s_name, s_tickers in SECTORS.items():
+                            if t in s_tickers:
+                                found_sector = s_name
+                                break
+                        matches.append((t, n, found_sector))
+                        seen.add(t)
+        if matches:
+            result_html = ('<div style="background:#1e1e1e;border:1px solid #2a2a2a;'
+                           'border-radius:8px;padding:12px 16px;margin-bottom:12px;">'
+                           f'<div style="font-size:11px;color:#666;margin-bottom:8px;">'
+                           f'{len(matches)}件ヒット</div>')
+            for t, n, s in matches[:20]:
+                href = f"?page=detail&ticker={t}&sector={s}" if s else f"?page=detail&ticker={t}"
+                result_html += (
+                    f'<div style="padding:6px 0;border-bottom:1px solid #2a2a2a;">'
+                    f'<a href="{href}" target="_self" style="color:#4d9fff;font-size:13px;'
+                    f'font-weight:700;text-decoration:none;">{t}</a>'
+                    f'<span style="color:#aaa;font-size:12px;margin-left:6px;">{n}</span>'
+                    f'<span style="color:#555;font-size:11px;margin-left:8px;">{s}</span></div>'
+                )
+            result_html += '</div>'
+            st.html(result_html)
 
     if all_signals:
         csv_rows = []
