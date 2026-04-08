@@ -750,18 +750,28 @@ else:
                     [0.5, "#2d2d2d"], [0.65, "#1a3a2a"], [1, "#1b8040"],
                 ],
                 zmin=-1, zmax=1, showscale=True,
+                xgap=2, ygap=2,
                 colorbar=dict(thickness=10, len=0.8,
-                    tickfont=dict(color="#666", size=10),
+                    tickfont=dict(color="#888", size=10),
                     bgcolor="#1e1e1e", bordercolor="#2a2a2a"),
             ))
             hm_height = len(y_labels) * 44 + 120
             fig_hm.update_layout(
                 autosize=False,
                 height=hm_height,
-                margin=dict(l=0, r=0, t=0, b=0),
-                plot_bgcolor="#1e1e1e", paper_bgcolor="#1e1e1e",
-                xaxis=dict(side="top", tickfont=dict(color="#888", size=11)),
-                yaxis=dict(tickfont=dict(color="#aaa", size=10)),
+                margin=dict(l=0, r=10, t=8, b=0),
+                plot_bgcolor="#181818", paper_bgcolor="#1e1e1e",
+                xaxis=dict(
+                    side="top",
+                    tickfont=dict(color="#cccccc", size=12),
+                    tickangle=0,
+                    showgrid=False,
+                ),
+                yaxis=dict(
+                    tickfont=dict(color="#cccccc", size=12),
+                    autorange="reversed",
+                    showgrid=False,
+                ),
             )
             st.plotly_chart(fig_hm, use_container_width=True, height=hm_height)
         else:
