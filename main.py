@@ -93,6 +93,9 @@ hr { border-color: #2a2a2a !important; margin: 10px 0 !important; }
 /* caption */
 [data-testid="stCaptionContainer"] { color: #666 !important; font-size: 11px !important; }
 
+/* expander 枠色 */
+[data-testid="stExpander"] { border-color: #2a2a2a !important; }
+
 
 /* ③コンテナ枠色を①②と統一（stVerticalBlock に直接 border が適用される） */
 [data-testid="stVerticalBlock"] {
@@ -152,7 +155,7 @@ def get_heatmap(sector: str, macros: tuple, period_days: int = 0) -> tuple[list,
                 ).dropna()
                 if len(aligned) >= 30:
                     corr, p_value = _pearsonr(aligned.iloc[:, 0], aligned.iloc[:, 1])
-                    if p_value > 0.05:
+                    if p_value > 0.1:
                         corr = 0.0
                     row.append(round(corr, 3) if not pd.isna(corr) else None)
                 else:
@@ -191,7 +194,7 @@ def get_top_heatmap(macros: tuple, period_days: int = 0, top_n: int = 25) -> tup
                     ).dropna()
                     if len(aligned) >= 30:
                         corr, p = _pearsonr(aligned.iloc[:, 0].values, aligned.iloc[:, 1].values)
-                        if p > 0.05:
+                        if p > 0.1:
                             corr = 0.0
                         val = round(corr, 3) if not pd.isna(corr) else None
                         row.append(val)
@@ -334,7 +337,7 @@ if page == "detail" and ticker_param:
     """)
 
     # ══ ② 値動き比較チャート ═══════════════════════════════
-    st.markdown("**値動き比較** — 先行指標（青）と銘柄（緑・ラグシフト済み）")
+    st.markdown("**値動き比較** — 先行指標（青）と銘柄（緑・ラグシフト済み）日次騰落率")
     period_map = {"3ヶ月": 63, "6ヶ月": 126, "12ヶ月": 252}
     period_sel = st.radio("期間", list(period_map.keys()), horizontal=True, index=0, key="detail_period")
     days = period_map[period_sel]
@@ -344,23 +347,23 @@ if page == "detail" and ticker_param:
         if len(aligned) > best_lag_val + 5:
             m_slice = aligned.iloc[:, 0].iloc[:-best_lag_val]
             s_vals  = aligned.iloc[:, 1].values[best_lag_val:]
-            m_cum   = ((1 + m_slice).cumprod() - 1) * 100
-            s_cum   = pd.Series(((1 + s_vals).cumprod() - 1) * 100, index=m_slice.index)
+            m_pct = m_slice * 100
+            s_pct = pd.Series(s_vals * 100, index=m_slice.index)
 
             fig_cmp = go.Figure()
             fig_cmp.add_trace(go.Scatter(
-                x=m_cum.index, y=m_cum.values, name=top_macro_name,
+                x=m_pct.index, y=m_pct.values, name=top_macro_name,
                 line=dict(color="#4d9fff", width=2)
             ))
             fig_cmp.add_trace(go.Scatter(
-                x=s_cum.index, y=s_cum.values, name=f"{ticker_param}（{best_lag_val}日シフト）",
+                x=s_pct.index, y=s_pct.values, name=f"{ticker_param}（{best_lag_val}日シフト）",
                 line=dict(color="#4caf84", width=2)
             ))
             fig_cmp.update_layout(
                 height=300, margin=dict(l=0, r=0, t=8, b=0),
                 plot_bgcolor="#1e1e1e", paper_bgcolor="#1e1e1e",
                 xaxis=dict(gridcolor="#2a2a2a", color="#666"),
-                yaxis=dict(title="累積騰落率 (%)", gridcolor="#2a2a2a", color="#666"),
+                yaxis=dict(title="日次騰落率 (%)", gridcolor="#2a2a2a", color="#666"),
                 legend=dict(bgcolor="#1e1e1e", font=dict(color="#aaa", size=11), orientation="h", y=1.08),
                 hovermode="x unified",
             )
@@ -576,7 +579,7 @@ else:
         reverse=True,
     )
 
-    threshold = 0.3
+    threshold = 0.2
     html2_header = section_header("②", "本日の注目シグナル TOP10",
                                   badge=f"{selected_period} / 閾値 ±{threshold}以上",
                                   badge_color="#2a1a1a", badge_text_color="#ef9a9a",
@@ -647,7 +650,7 @@ else:
             tag = r.get("tag") or _classify_tag(s3m_r, 0.0, s12m_r)
             badge_html = TAG_BADGE_HTML.get(tag, "")
             conv = r.get("convergence_score")
-            conv_str = f'<span style="font-size:10px;color:#555;margin-left:8px;">収束:{conv:.2f}</span>' if conv is not None else ""
+            conv_str = f'<span style="font-size:12px;color:#888;margin-left:8px;">収束:{conv:.2f}</span>' if conv is not None else ""
             html2 += f"""
             <div style="display:flex;justify-content:space-between;align-items:center;
                  padding:10px 0;border-bottom:1px solid #2a2a2a;">
