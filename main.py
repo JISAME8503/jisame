@@ -163,6 +163,51 @@ def get_heatmap(sector: str, macros: tuple, period_days: int = 0) -> tuple[list,
     return y_labels, matrix
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_top_heatmap(macros: tuple, period_days: int = 0, top_n: int = 25) -> tuple[list, list]:
+    """全セクター横断で相関係数絶対値が高い上位N銘柄のヒートマップ"""
+    macro_df = cached_load_macro()
+    if period_days > 0:
+        macro_df = macro_df.iloc[-period_days:]
+
+    all_rows = []  # (max_abs_corr, y_label, corr_row)
+    for sector_name in SECTORS:
+        stock_df = cached_load_sector(sector_name)
+        if stock_df.empty:
+            continue
+        s_df = stock_df.iloc[-period_days:] if period_days > 0 else stock_df
+        for ticker in s_df.columns:
+            stock = s_df[ticker].dropna()
+            code = str(ticker).replace(".T", "")
+            name = TICKER_NAMES.get(str(ticker), "")[:4]
+            label = f"{code} {name}" if name else f"{code} "
+            row = []
+            max_abs = 0.0
+            for macro_name in macros:
+                macro_ticker = MACRO_INDICATORS.get(macro_name)
+                if macro_ticker and macro_ticker in macro_df.columns:
+                    aligned = pd.concat(
+                        [macro_df[macro_ticker], stock], axis=1
+                    ).dropna()
+                    if len(aligned) >= 30:
+                        corr, p = _pearsonr(aligned.iloc[:, 0].values, aligned.iloc[:, 1].values)
+                        if p > 0.05:
+                            corr = 0.0
+                        val = round(corr, 3) if not pd.isna(corr) else None
+                        row.append(val)
+                        if val is not None:
+                            max_abs = max(max_abs, abs(val))
+                    else:
+                        row.append(None)
+                else:
+                    row.append(None)
+            all_rows.append((max_abs, label, row))
+
+    all_rows.sort(key=lambda x: x[0], reverse=True)
+    top = all_rows[:top_n]
+    return [r[1] for r in top], [r[2] for r in top]
+
+
 def load_cache() -> dict:
     if os.path.exists(CACHE_FILE):
         with open(CACHE_FILE, "r", encoding="utf-8") as f:
@@ -667,9 +712,10 @@ else:
         </div>
         """)
 
-        sector_list = list(SECTORS.keys())
+        TOP_SECTOR = "注目セクター"
+        sector_list = [TOP_SECTOR] + list(SECTORS.keys())
         if "selected_sector" not in st.session_state:
-            st.session_state["selected_sector"] = sector_list[0]
+            st.session_state["selected_sector"] = TOP_SECTOR
 
         selected_sector = st.session_state["selected_sector"]
         cols = st.columns([1] * len(sector_list))
@@ -681,14 +727,17 @@ else:
                 st.session_state["selected_sector"] = sector
                 st.rerun()
 
-        sector_results = analysis.get(selected_sector, [])
-
-        # ヒートマップ描画（全銘柄×全マクロ）
+        # ヒートマップ描画
         HEATMAP_MACROS = ("ドル円", "原油", "VIX", "銅先物", "フィラデルフィア半導体", "米10年金利")
         hm_macros = tuple(m for m in HEATMAP_MACROS if m in MACRO_INDICATORS)
 
+        sector_results = [] if selected_sector == TOP_SECTOR else analysis.get(selected_sector, [])
+
         with st.spinner("計算中..."):
-            y_labels, matrix = get_heatmap(selected_sector, hm_macros, period_days)
+            if selected_sector == TOP_SECTOR:
+                y_labels, matrix = get_top_heatmap(hm_macros, period_days)
+            else:
+                y_labels, matrix = get_heatmap(selected_sector, hm_macros, period_days)
 
         if matrix:
             fig_hm = go.Figure(go.Heatmap(
