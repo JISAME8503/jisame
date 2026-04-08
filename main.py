@@ -156,9 +156,7 @@ def get_heatmap(sector: str, macros: tuple, period_days: int = 0) -> tuple[list,
                     [macro_df[macro_ticker], stock], axis=1
                 ).dropna()
                 if len(aligned) >= 30:
-                    corr, p_value = _pearsonr(aligned.iloc[:, 0], aligned.iloc[:, 1])
-                    if p_value > 0.1:
-                        corr = 0.0
+                    corr, _ = _pearsonr(aligned.iloc[:, 0], aligned.iloc[:, 1])
                     row.append(round(corr, 3) if not pd.isna(corr) else None)
                 else:
                     row.append(None)
@@ -195,9 +193,7 @@ def get_top_heatmap(macros: tuple, period_days: int = 0, top_n: int = 25) -> tup
                         [macro_df[macro_ticker], stock], axis=1
                     ).dropna()
                     if len(aligned) >= 30:
-                        corr, p = _pearsonr(aligned.iloc[:, 0].values, aligned.iloc[:, 1].values)
-                        if p > 0.1:
-                            corr = 0.0
+                        corr, _ = _pearsonr(aligned.iloc[:, 0].values, aligned.iloc[:, 1].values)
                         val = round(corr, 3) if not pd.isna(corr) else None
                         row.append(val)
                         if val is not None:
