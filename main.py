@@ -562,11 +562,16 @@ else:
     # ── 期間セレクタ（②③共通） ───────────────────────────
     PERIOD_OPTIONS  = {"3ヶ月": 63, "6ヶ月": 126, "12ヶ月": 252}
     PERIOD_SCORE_KEY = {"3ヶ月": "score_3m", "6ヶ月": "score_6m", "12ヶ月": "score_12m"}
-    selected_period = st.radio(
-        "分析期間", list(PERIOD_OPTIONS.keys()),
-        horizontal=True, key="signal_period",
-        label_visibility="collapsed",
-    )
+    if "selected_period" not in st.session_state:
+        st.session_state["selected_period"] = "3ヶ月"
+    selected_period = st.session_state["selected_period"]
+    p_cols = st.columns([1] * len(PERIOD_OPTIONS))
+    for p_col, p_label in zip(p_cols, PERIOD_OPTIONS):
+        if p_col.button(p_label, key=f"period_{p_label}",
+                        use_container_width=True,
+                        type="primary" if p_label == selected_period else "secondary"):
+            st.session_state["selected_period"] = p_label
+            st.rerun()
     period_days = PERIOD_OPTIONS[selected_period]
     score_key   = PERIOD_SCORE_KEY[selected_period]
 
