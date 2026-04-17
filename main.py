@@ -335,7 +335,7 @@ if page == "detail" and ticker_param:
     """)
 
     # ══ ② 値動き比較チャート ═══════════════════════════════
-    st.markdown("**値動き比較** — 先行指標（青）と銘柄（緑・ラグシフト済み）日次騰落率")
+    st.markdown(f"**値動き比較** — 先行指標（青）と銘柄（緑・{best_lag_val}日前倒し済み）日次騰落率")
     period_map = {"3ヶ月": 63, "6ヶ月": 126, "12ヶ月": 252}
     period_sel = st.radio("期間", list(period_map.keys()), horizontal=True, index=0, key="detail_period")
     days = period_map[period_sel]
